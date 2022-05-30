@@ -16,7 +16,7 @@ def _evaluate_one_selection(features: np.array, labels: np.array, model_function
 
 
 def greedy_feature_selection(features: np.array, labels: np.array, model_function, metric=mean_absolute_error,
-                             max_solution_length: int = 2, shuffle: bool = False) -> list:
+                             max_solution_length: int = 2, shuffle: bool = False, allow_duplicates: bool = False) -> list:
     current_selection = []
     best_overall_selection = []
     best_overall_error = None
@@ -29,19 +29,20 @@ def greedy_feature_selection(features: np.array, labels: np.array, model_functio
         # TODO: optional remaining_features without already selected features, prevents double selection of the same feature
         remaining_features = features
         for next_feature_index in range(remaining_features.shape[1]):
-            print("Testing with next feature", next_feature_index)
+            if (next_feature_index not in current_selection) or allow_duplicates:
+                print("Testing with feature", next_feature_index)
 
-            feature_selection_to_test = current_selection + [next_feature_index]
-            error = _evaluate_one_selection(features=features, labels=labels, model_function=model_function, metric=metric,
-                                            feature_selection_to_test=feature_selection_to_test, shuffle=shuffle)
-            print("Obtained error ", error)
+                feature_selection_to_test = current_selection + [next_feature_index]
+                error = _evaluate_one_selection(features=features, labels=labels, model_function=model_function, metric=metric,
+                                                feature_selection_to_test=feature_selection_to_test, shuffle=shuffle)
+                print("Obtained error ", error)
 
-            # compare the performance of the current selection to the so far best selection of this iteration
-            if current_performance is None or error < current_performance:
-                print("Found new best candidate ", next_feature_index)
-                print(next_feature_index, " with ", error, " was better than ", best_next_feature, " with ", current_performance)
-                best_next_feature = next_feature_index
-                current_performance = error
+                # compare the performance of the current selection to the so far best selection of this iteration
+                if current_performance is None or error < current_performance:
+                    print("Found new best candidate ", next_feature_index)
+                    print(next_feature_index, " with ", error, " was better than ", best_next_feature, " with ", current_performance)
+                    best_next_feature = next_feature_index
+                    current_performance = error
 
         current_selection.append(best_next_feature)
         print("Found current best selection with error", current_performance, " to be", current_selection)

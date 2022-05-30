@@ -15,8 +15,9 @@ def _evaluate_one_selection(features: np.array, labels: np.array, model_function
     return error
 
 
-def greedy_feature_selection(features: np.array, labels: np.array, model_function, metric=mean_absolute_error,
-                             max_solution_length: int = 2, shuffle: bool = False, allow_duplicates: bool = False) -> list:
+def greedy_feature_selection(features: np.array, labels: np.array, model_function, metric_function=mean_absolute_error,
+                             max_solution_length: int = 2, shuffle: bool = False, allow_duplicates: bool = False,
+                             minimize_metric: bool = True) -> list:
     current_selection = []
     best_overall_selection = []
     best_overall_error = None
@@ -33,16 +34,18 @@ def greedy_feature_selection(features: np.array, labels: np.array, model_functio
                 print("Testing with feature", next_feature_index)
 
                 feature_selection_to_test = current_selection + [next_feature_index]
-                error = _evaluate_one_selection(features=features, labels=labels, model_function=model_function, metric=metric,
-                                                feature_selection_to_test=feature_selection_to_test, shuffle=shuffle)
-                print("Obtained error ", error)
+                metric = _evaluate_one_selection(features=features, labels=labels, model_function=model_function, metric=metric_function,
+                                                 feature_selection_to_test=feature_selection_to_test, shuffle=shuffle)
+                print("Obtained metric ", metric)
 
                 # compare the performance of the current selection to the so far best selection of this iteration
-                if current_performance is None or error < current_performance:
+                if current_performance is None or \
+                    (minimize_metric is True and metric < current_performance) or \
+                        (minimize_metric is False and metric > current_performance):
                     print("Found new best candidate ", next_feature_index)
-                    print(next_feature_index, " with ", error, " was better than ", best_next_feature, " with ", current_performance)
+                    print(next_feature_index, " with ", metric, " was better than ", best_next_feature, " with ", current_performance)
                     best_next_feature = next_feature_index
-                    current_performance = error
+                    current_performance = metric
 
         current_selection.append(best_next_feature)
         print("Found current best selection with error", current_performance, " to be", current_selection)

@@ -51,7 +51,9 @@ def greedy_feature_selection(features: np.array, labels: np.array, model_functio
         print("Found current best selection with error", current_performance, " to be", current_selection)
 
         # compare the best selection of this iteration to the overall best
-        if best_overall_error is None or current_performance < best_overall_error:
+        if best_overall_error is None or \
+            (minimize_metric is True and current_performance < best_overall_error) or \
+                (minimize_metric is False and current_performance > best_overall_error):
             best_overall_selection = copy.copy(current_selection)
             best_overall_error = current_performance
 
